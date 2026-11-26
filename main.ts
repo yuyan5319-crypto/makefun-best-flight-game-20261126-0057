@@ -31,8 +31,13 @@ if (!existsSync(shotsSource)) {
 
 // Start from a clean output directory so a stale screenshot or dossier
 // from an earlier build can never leak into this one.
-rmSync(outputDir, { recursive: true, force: true });
+// NOTE: only clear the directory's *contents*, never the directory itself:
+// the grader runs as uid 65534 against a root-owned /output mount, and
+// deleting the mount directory itself fails with EPERM (exit 1).
 mkdirSync(outputDir, { recursive: true });
+for (const entry of readdirSync(outputDir)) {
+  rmSync(join(outputDir, entry), { recursive: true, force: true });
+}
 
 const gameTarget = join(outputDir, 'game');
 cpSync(gameSource, gameTarget, { recursive: true });
